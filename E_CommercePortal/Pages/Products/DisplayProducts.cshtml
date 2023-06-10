@@ -1,0 +1,131 @@
+﻿@page
+@model E_CommercePortal.Pages.Products.DisplayProductsModel
+@{
+}
+<h1>Display Products</h1>
+<div id="productsContainer">
+    @foreach (var category in Model.productsDTOs.LstCategoryProductsDTO)
+    {
+        <h5 class="category-group">Category Name :  @category.CategoryName</h5>
+        <table class="table">
+            <thead>
+                <tr>                  
+                    <th>Name</th>
+                    <th>Ar Name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Has Available Stock</th>
+                    <th>Image</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in category.Products)
+                {
+                    <tr>                      
+                        <td>@product.Name</td>
+                        <td>@product.ArName</td>
+                        <td>@product.Description</td>
+                        <td>@product.Price</td>
+                        <td><input type="checkbox" asp-for="@product.HasAvailableStock" /></td>
+                        @if (!string.IsNullOrEmpty(product.Image))
+                        {
+                            <td><img style="width:70px" src="@product.Image.Split("wwwroot")[1]" /></td>
+
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<!-- Pagination -->
+<nav aria-label="Product pagination">
+    <ul id="pagination" class="pagination">
+        @if (Model.productsDTOs.PageIndex > 1)
+        {
+            <li class="page-item">
+                <a class="page-link" href="javascript:void(0)" onclick="loadPage(1)">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="javascript:void(0)" onclick="loadPage(@(Model.productsDTOs.PageIndex - 1))">Previous</a>
+            </li>
+        }
+
+        @for (int i = 1; i <= Model.productsDTOs.TotalPages; i++)
+        {
+            <li class="page-item @(Model.productsDTOs.PageIndex == i ? "active" : "")">
+                <a class="page-link" href="javascript:void(0)" onclick="loadPage(@i)">@i</a>
+            </li>
+        }
+
+        @if (Model.productsDTOs.PageIndex < Model.productsDTOs.TotalPages)
+        {
+            <li class="page-item">
+                <a class="page-link" href="javascript:void(0)" onclick="loadPage(@(Model.productsDTOs.PageIndex + 1))">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="javascript:void(0)" onclick="loadPage(@Model.productsDTOs.TotalPages)">Last</a>
+            </li>
+        }
+    </ul>
+</nav>
+
+
+
+<script>
+    function loadPage(pageIndex) {
+        $.ajax({
+            url: `?handler=ShowNextOrPreviousPage&PageIndex=${pageIndex}`,
+            type: 'GET',
+            success: function (result) {
+                var lstCategoryProducts = result.lstCategoryProductsDTO;
+                var groupCategoryHTag
+                var theadTag;
+                var tbodyTag
+               $("#productsContainer").html("");
+                 $.each(lstCategoryProducts,function(key,value){
+                      groupCategoryHTag='<h5 class="category-group">Category Name : '+value.categoryName+'</h5>';
+                     
+                      theadTag='<table class="table"> <thead><tr><th>Name</th><th>Ar Name</th><th>Description</th>';
+                    theadTag += '<th>Price</th><th>Has Available Stock</th><th>Image</th></tr></thead>';
+                    
+                     tbodyTag = "<tbody>";
+                     var lstProducts=value.products;                     
+                     $.each(lstProducts,function(index,item){
+                         tbodyTag+='<tr><td>'+item.name+'</td>'+'<td>'+item.arName+'</td>'+'<td>'+item.description+'</td>'+'<td>'+item.price+'</td>';
+
+                        if (item.hasAvailableStock == true)
+                        {
+                            tbodyTag += '<td><input type="checkbox" checked="checked"/></td>';
+
+                        }
+                        else
+                        {
+                            tbodyTag += '<td><input type="checkbox"  checked="unchecked"/></td>';
+                        }
+                         if(!!item.image)
+                         {
+                              tbodyTag+='<td><img style="width:70px" src="'+item.image.split("wwwroot")[1]+'"></td>';
+                         }
+                         else
+                         {
+                            tbodyTag += '<td></td>';
+                         }
+                        tbodyTag+='</tr>';
+                      
+                     });
+                    var tFooter = "</tbody></table>";
+                    var finalTable = groupCategoryHTag + theadTag + tbodyTag + tFooter;
+                    $("#productsContainer").append(finalTable);
+                   
+                });
+   
+            },
+            error: function (xhr, status, error) {
+                console.log(error);
+            }
+        });
+    }
+</script>
+
